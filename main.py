@@ -12,9 +12,11 @@ class ModelSelectionWindow:
         self.root.title("Gyrocompass Model Selection")
         self.root.geometry("550x500")
         self.root.resizable(False, False)
+        self.root.grab_set()
         
         self.on_model_selected = on_model_selected
         self.selected_model = None
+        self.models_list = list(GYRO_MODELS.keys())
         
         self.setup_ui()
         
@@ -38,24 +40,24 @@ class ModelSelectionWindow:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.model_listbox = tk.Listbox(selection_frame, yscrollcommand=scrollbar.set, 
-                                        font=("Arial", 12), height=10)
+                                        font=("Arial", 12), height=10, width=40)
         self.model_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.model_listbox.yview)
         
         # Populate listbox
-        self.models_list = list(GYRO_MODELS.keys())
         for model in self.models_list:
             self.model_listbox.insert(tk.END, model)
         
         # Bind selection event to show details
         self.model_listbox.bind('<<ListboxSelect>>', self.on_model_select)
+        self.model_listbox.bind('<Double-Button-1>', lambda e: self.continue_with_model())
         
         # Details frame
         details_frame = ttk.LabelFrame(self.root, text="Model Details", padding=10)
         details_frame.pack(fill=tk.X, padx=20, pady=10)
         
         self.details_text = tk.Text(details_frame, height=5, width=50, 
-                                    font=("Arial", 9), wrap=tk.WORD)
+                                    font=("Arial", 9), wrap=tk.WORD, relief=tk.FLAT)
         self.details_text.pack(fill=tk.BOTH, expand=True)
         self.details_text.config(state=tk.DISABLED)
         
@@ -64,13 +66,14 @@ class ModelSelectionWindow:
         button_frame.pack(fill=tk.X, padx=20, pady=20)
         
         ttk.Button(button_frame, text="Continue", 
-                  command=self.continue_with_model).pack(side=tk.LEFT, padx=5)
+                  command=self.continue_with_model, width=15).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Exit", 
-                  command=self.root.quit).pack(side=tk.RIGHT, padx=5)
+                  command=self.root.quit, width=15).pack(side=tk.RIGHT, padx=5)
         
-        # Select first model by default
-        self.model_listbox.select_set(0)
-        self.model_listbox.event_generate('<<ListboxSelect>>')
+        # Select first model by default and show its details
+        if len(self.models_list) > 0:
+            self.model_listbox.selection_set(0)
+            self.on_model_select(None)
         
     def on_model_select(self, event):
         """Display model details when selected"""
